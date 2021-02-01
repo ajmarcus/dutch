@@ -6,9 +6,9 @@ from uuid import UUID
 app = FastAPI()
 
 
-@app.post("/image", response_model=UUID)
-def create_image():
-    return db.create_image()
+@app.on_event("startup")
+def init_db():
+    db.init()
 
 
 @app.post("/recipe", response_model=GetRecipe)

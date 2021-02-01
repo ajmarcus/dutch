@@ -1,10 +1,10 @@
 from enum import Enum
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel
 from typing import List
 from uuid import UUID
 
 
-class Unit(str, Enum):
+class Measure(str, Enum):
     cup = "cup"
     deciliter = "deciliter"
     fluid_ounce = "fluid_ounce"
@@ -28,18 +28,17 @@ class Ingredient(BaseModel):
     name: str
     numerator: int
     denominator: int
-    unit: Unit
+    measure: Measure
 
 
 class Step(BaseModel):
     name: str
     duration_minute: int
-    ingredients: List[Ingredient]
 
 
 class CreateRecipe(BaseModel):
     name: str
-    image_uuid: UUID
+    ingredients: List[Ingredient]
     steps: List[Step]
 
 
@@ -48,6 +47,5 @@ class GetRecipe(BaseModel):
     version: int
     name: str
     duration_minute: int
-    image_url: HttpUrl
     ingredients: List[Ingredient]
     steps: List[Step]
