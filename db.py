@@ -3,6 +3,7 @@ import os
 from sqlite3.dbapi2 import Connection
 from schema import CreateRecipe, GetRecipe, Ingredient, Measure, Step
 from sqlite3 import connect
+from typing import Optional
 from uuid import UUID, uuid4
 
 
@@ -48,8 +49,10 @@ INSERT_STEP = """INSERT INTO step
 VALUES (?,?,?,?)"""
 
 
-def _get_recipe(db: Connection, uuid: UUID, version: int) -> GetRecipe:
+def _get_recipe(db: Connection, uuid: UUID, version: int) -> Optional[GetRecipe]:
     recipe = db.execute(GET_RECIPE, (str(uuid), version)).fetchone()
+    if recipe is None:
+        return None
     ingredients = db.execute(GET_INGREDIENTS, (str(recipe[0])))
     steps = db.execute(GET_STEPS, (str(recipe[0])))
     return GetRecipe(
@@ -79,7 +82,7 @@ def init() -> bool:
     return True
 
 
-def create_recipe(recipe: CreateRecipe) -> GetRecipe:
+def create_recipe(recipe: CreateRecipe) -> Optional[GetRecipe]:
     with connect(DB_FILE) as db:
         uuid = uuid4()
         version = 0
@@ -103,7 +106,7 @@ def create_recipe(recipe: CreateRecipe) -> GetRecipe:
         return _get_recipe(db=db, uuid=uuid, version=version)
 
 
-def create_recipe_version(uuid: UUID, recipe: CreateRecipe) -> GetRecipe:
+def create_recipe_version(uuid: UUID, recipe: CreateRecipe) -> Optional[GetRecipe]:
     with connect(DB_FILE) as db:
         version = (
             int(db.execute(GET_LAST_RECIPE_VERSION, (str(uuid),)).fetchone()[0]) + 1
@@ -128,12 +131,15 @@ def create_recipe_version(uuid: UUID, recipe: CreateRecipe) -> GetRecipe:
         return _get_recipe(db=db, uuid=uuid, version=version)
 
 
-def get_latest_recipe_version(uuid: UUID) -> GetRecipe:
+def get_latest_recipe_version(uuid: UUID) -> Optional[GetRecipe]:
     with connect(DB_FILE) as db:
-        version = int(db.execute(GET_LAST_RECIPE_VERSION, (str(uuid),)).fetchone()[0])
+        version_query = db.execute(GET_LAST_RECIPE_VERSION, (str(uuid),)).fetchone()
+        if version_query is None:
+            return None
+        version = int(version_query[0])
         return _get_recipe(db=db, uuid=uuid, version=version)
 
 
-def get_recipe_version(uuid: UUID, version: int) -> GetRecipe:
+def get_recipe_version(uuid: UUID, version: int) -> Optional[GetRecipe]:
     with connect(DB_FILE) as db:
         return _get_recipe(db=db, uuid=uuid, version=version)
