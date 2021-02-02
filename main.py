@@ -1,7 +1,11 @@
+#!/usr/bin/env python
 import db
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+from os import environ
 from schema import CreateRecipe, GetRecipe
 from uuid import UUID
+import uvicorn
 
 app = FastAPI()
 
@@ -9,6 +13,11 @@ app = FastAPI()
 @app.on_event("startup")
 def init_db():
     db.init()
+
+
+@app.get("/")
+async def redirect_docs():
+    return RedirectResponse("/docs")
 
 
 @app.post("/recipe", response_model=GetRecipe)
@@ -37,3 +46,7 @@ async def get_recipe_version(uuid: UUID, version: int):
     if response is None:
         raise HTTPException(status_code=404, detail="Recipe Version not found")
     return response
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=int(environ.get("PORT", 8080)))

@@ -12,4 +12,4 @@ COPY . ./
 RUN pip install -r requirements.txt
 
 # Run the web service on container startup
-CMD uvicorn main:app
+CMD main.py
